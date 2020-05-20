@@ -33,6 +33,8 @@ The areas of inspiration for the literature were autonomous vehicle applications
 
 # Discussion
 
+- Metric to evaluate semantic segmentation model are Pixel Accuracy, Intersection-Over-Union (Jaccard index), Dice Coefficient (F1 Score)
+
 # Conclusion
 
 ## Decision
