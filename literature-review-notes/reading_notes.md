@@ -57,6 +57,11 @@ Datasets specifically for autonomous driving scenarios:
 
 PASCAL VOC and Microsoft COCO are more general in nature and therefore it might be better to compare between Cityscapes and Apolloscape since they are constructed and tailored towards autonomous vehicle scene parsing [[citation](http://apolloscape.auto/scene.html)]. Mapillary Vistas is omitted due to a licensing paywall to access the full data with all of the annotations.
 
+Selected datasets:
+
+- Cityscapes
+- Apolloscape
+
 ## Questions
 
 Here are some questions that came after some reading and exploration:
@@ -102,6 +107,8 @@ The rationale for this choice are these are the current state of the art methods
 - What is the difference between the different IoUs like mIoU and etc? _I think mIoU means 'Mean IoU'._
 - What are all the different "methods" listed in the ASPP paper?
 - Do I need to consider the other datasets for the comparison, or can I use their purported performance claims as the baseline and just continue with cityscapes and apolloscape?
+- What is DeepLabv3+? [[citation](https://github.com/tensorflow/models/tree/master/research/deeplab)]
+-  
 
 ## Citations referenced
 
