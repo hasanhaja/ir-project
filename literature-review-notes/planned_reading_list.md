@@ -13,11 +13,20 @@ The flow of the lists is as follows:
 - _Deep Residual Learning for Image Recognition_ by Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun [[link](https://arxiv.org/pdf/1512.03385.pdf)]
 - Awesome Autonomous Driving
     - PASCAL VOC2012
-    - Pyramid Scene Parsing Network
 
 # Planned
 
-- [ ]
+- [ ] [Understanding DL techniques for semantic segmentation](https://arxiv.org/pdf/1907.06119v1.pdf)
+- [ ] [Pyramid Scene Parsing Network](https://openaccess.thecvf.com/content_cvpr_2017/papers/Zhao_Pyramid_Scene_Parsing_CVPR_2017_paper.pdf)
+- [ ] [FC-DenseNet](https://arxiv.org/pdf/1611.09326.pdf)
+- [ ] [DeepLab](https://arxiv.org/pdf/1606.00915.pdf)
+- [ ] [DeepLabv3](https://arxiv.org/pdf/1706.05587.pdf)
+- [ ] [Cityscapes](https://arxiv.org/pdf/1604.01685.pdf)
+- [ ] [ApolloScape](http://ad-apolloscape.bj.bcebos.com/public%2FApolloScape%20Dataset.pdf)
+- [ ] [Strip pooling](https://arxiv.org/pdf/2003.13328v1.pdf)
+- [ ] [OCNet](https://arxiv.org/pdf/1809.00916v1.pdf)
+- [ ] [NuScenes](https://openaccess.thecvf.com/content_CVPR_2020/papers/Caesar_nuScenes_A_Multimodal_Dataset_for_Autonomous_Driving_CVPR_2020_paper.pdf)
+
 
 # Dismissed
 
