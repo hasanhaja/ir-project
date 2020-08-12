@@ -85,6 +85,8 @@ Some possible methods and the datasets they were trained on:
   - There are two versions here: [VGG16 based](http://liangchiehchen.com/projects/DeepLabv2_vgg.html) and [ResNet101 based](http://liangchiehchen.com/projects/DeepLabv2_resnet.html)
   - ResNet based method might better
   - Did not exploit multiscale inputs for cityscapes dataset because of limited GPU memory
+  - [DeepLabv3](https://towardsdatascience.com/review-deeplabv3-atrous-convolution-semantic-segmentation-6d818bfd1d74)
+  - DeepLabv3 can be downloaded and used from Pytorch [[source](https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/)]
 - FC-DenseNet: Achieves sota performance on CamVid and Gatech
   - Built in Theano and Lasagne [[Source code and model](https://github.com/SimJeg/FC-DenseNet)]
   - The only model published is the FC-DenseNet103 variant. It is very deep and evaluation was originally done on platforms with Titan X 12GB GPU.
@@ -92,8 +94,9 @@ Some possible methods and the datasets they were trained on:
 Selected methods:
 
 - PSPNet
-- ASPP_VGG16
-- ASPP_ResNet101
+- ~~ASPP_VGG16~~
+- ~~ASPP_ResNet101~~
+- DeepLabv3_ResNet101
 - FC-DenseNet103
 
 ### Rationale
@@ -108,7 +111,7 @@ The rationale for this choice are these are the current state of the art methods
 - What are all the different "methods" listed in the ASPP paper?
 - Do I need to consider the other datasets for the comparison, or can I use their purported performance claims as the baseline and just continue with cityscapes and apolloscape?
 - What is DeepLabv3+? [[citation](https://github.com/tensorflow/models/tree/master/research/deeplab)]
--  
+-
 
 ## Citations referenced
 
@@ -116,3 +119,11 @@ The rationale for this choice are these are the current state of the art methods
 - ASPP [[citation](https://arxiv.org/pdf/1606.00915.pdf)]
 - FC-DenseNet [[citation](https://arxiv.org/pdf/1611.09326.pdf)]
 - Tool to download datasets [[citation](https://github.com/fvisin/dataset_loaders)]
+
+# Evaluation criteria
+
+There are some recurring segmentation [metrics](https://www.jeremyjordan.me/evaluating-image-segmentation-models/) to evaluate the segmentation models:
+
+- mIoU
+- mAcc
+- aAcc
