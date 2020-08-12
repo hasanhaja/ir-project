@@ -87,6 +87,7 @@ Some possible methods and the datasets they were trained on:
   - Did not exploit multiscale inputs for cityscapes dataset because of limited GPU memory
   - [DeepLabv3](https://towardsdatascience.com/review-deeplabv3-atrous-convolution-semantic-segmentation-6d818bfd1d74)
   - DeepLabv3 can be downloaded and used from Pytorch [[source](https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/)]
+  - [DeepLabv1 vs v2](https://towardsdatascience.com/review-deeplabv1-deeplabv2-atrous-convolution-semantic-segmentation-b51c5fbde92d)
 - FC-DenseNet: Achieves sota performance on CamVid and Gatech
   - Built in Theano and Lasagne [[Source code and model](https://github.com/SimJeg/FC-DenseNet)]
   - The only model published is the FC-DenseNet103 variant. It is very deep and evaluation was originally done on platforms with Titan X 12GB GPU.
@@ -127,3 +128,7 @@ There are some recurring segmentation [metrics](https://www.jeremyjordan.me/eval
 - mIoU
 - mAcc
 - aAcc
+
+## Backbone
+
+The base models, like the base Keras models used in the group project, is called a backbone.
