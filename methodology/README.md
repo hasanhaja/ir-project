@@ -33,6 +33,11 @@
     - How does this feed into the training parts?
     - How is this different to the training steps in the previous projects?
 
+## ApolloScape
+
+- The dataloader should be different because of the difference in dataset structure.
+    - [This](https://capsulesbot.com/blog/2018/08/24/apolloscape-posenet-pytorch.html) resource is very informative and it requires [this](https://github.com/VainF/DeepLabV3Plus-Pytorch) script, which I think contains all the dataloading information.
+
 # Unknowns
 
 - Which part of the dataset needs to be used?
