@@ -17,7 +17,6 @@
     1. Explore the impact of (dedicated) GPU vs no GPU
     2. This can be done on Macbook Pro 2013 13", 2013 15", 2019 15", Windows w/ GTX1160, Jetson (and other platform by Eric), Digital Ocean droplet, AWS Pytorch
 
-
 # Todo
 
 - Run models with evaluation data from Cityscapes
@@ -25,6 +24,14 @@
 - Revisit methodology for further experimentation
 - Review literature (and document) again for details regarding dataset
 - Review literature and documentation of pytorch (or any other) regarding GPU usage during evaluation
+
+# Dataset
+
+## Cityscapes
+
+- [Scripts to understand data](https://github.com/mcordts/cityscapesScripts)
+    - How does this feed into the training parts?
+    - How is this different to the training steps in the previous projects?
 
 # Unknowns
 
