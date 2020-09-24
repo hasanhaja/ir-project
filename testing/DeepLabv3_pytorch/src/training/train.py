@@ -122,24 +122,27 @@ model = deeplabv3plus_resnet101(num_classes=19, output_stride=output_stride)
 set_bn_momentum(model.backbone, momentum=0.01)
 
 # Set up optimizer
-optimizer = torch.optim.SGD(params=[
-    {'params': model.backbone.parameters(), 'lr': 0.1*opts.lr},
-    {'params': model.classifier.parameters(), 'lr': opts.lr},
-], lr=opts.lr, momentum=0.9, weight_decay=opts.weight_decay)
-
-# Set up scheduler and criterion: Using the defaults
-
-scheduler = PolyLR(optimizer, opts.total_itrs, power=0.9)
-
-criterion = nn.CrossEntropyLoss(ignore_index=255, reduction='mean')
-
-# Train eval metrics
+lr = 0.1
+weight_decay = 1e-4
 total_itrs = 30e3
 val_interval = 100
 
 best_score = 0.0
 cur_itrs = 0
 cur_epochs = 0
+
+optimizer = torch.optim.SGD(params=[
+    {'params': model.backbone.parameters(), 'lr': 0.1*lr},
+    {'params': model.classifier.parameters(), 'lr': lr},
+], lr=lr, momentum=0.9, weight_decay=weight_decay)
+
+# Set up scheduler and criterion: Using the defaults
+
+scheduler = PolyLR(optimizer, total_itrs, power=0.9)
+
+criterion = nn.CrossEntropyLoss(ignore_index=255, reduction='mean')
+
+# Train eval metrics
 
 while True:  # cur_itrs < opts.total_itrs:
     # =====  Train  =====
