@@ -32,6 +32,7 @@
 - [Scripts to understand data](https://github.com/mcordts/cityscapesScripts)
     - How does this feed into the training parts?
     - How is this different to the training steps in the previous projects?
+- This is directly supported in Pytorch, I think. Refer to [docs](https://pytorch.org/docs/stable/torchvision/datasets.html#cityscapes)
 
 ## ApolloScape
 

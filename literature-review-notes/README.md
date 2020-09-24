@@ -25,3 +25,7 @@ Pytorch may be better for research.
 # References
 
 - Siraj, YT [[source](https://www.youtube.com/watch?v=nbJ-2G2GXL0)]
+
+# Methods
+
+- [Jetson segnet](https://github.com/dusty-nv/jetson-inference/blob/master/docs/segnet-console-2.md#segmenting-images-from-the-command-line)
