@@ -2,3 +2,14 @@
 /testing/PSPNet_pytorch
 /testing/DeepLabV3Plus-Pytorch
 /testing/models
+/testing/DeepLabv3_pytorch/preliminary_test_results/images
+/testing/DeepLabv3_pytorch/preliminary_test_results/result
+/testing/DeepLabv3_pytorch/preliminary_test_results/*.jpg
+/testing/DeepLabv3_pytorch/preliminary_test_results/model_13_2_2_2_epoch_580.pth
+/testing/DeepLabv3_pytorch/src/result
+/testing/DeepLabv3_pytorch/models
+/testing/DeepLabv3_pytorch/src/training/pretrained_weights
+/testing/DeepLabv3_pytorch/src/training/__pycache__
+/testing/DeepLabv3_pytorch/src/__pycache__
+/testing/DeepLabv3_pytorch/src/backbone/__pycache__
+/testing/DeepLabv3_pytorch/src/utilities/__pycache__
