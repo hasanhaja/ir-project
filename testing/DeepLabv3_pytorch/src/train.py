@@ -142,6 +142,9 @@ def main():
     val_loader = DataLoader(val_dst, batch_size=batch_size,
                             shuffle=True, num_workers=2)
 
+    # TODO verify if the dimensions of the dataloaders are the same.
+    # TODO verify if the labeling is correct
+
     dataloaders = {"train": train_loader, "val": val_loader}
 
     dataset_sizes = {"train": len(train_dst), "val": len(val_dst)}
@@ -186,6 +189,15 @@ def main():
     # generalize this
     # model.classifier[3] = nn.Conv2d(256, 19, kernel_size = (1, 1), stride=(1, 1))
 
+    # TODO output the cityscapes model like this and compared
+
+    print(model)
+
+    return 
+
+    # TODO find the corresponding paper
+    # TODO check with v3 and other implementations
+
     model.classifier = nn.Sequential(
         nn.Conv2d(304, 256, kernel_size=(3, 3), stride=(
             1, 1), padding=(1, 1), bias=False),
@@ -194,8 +206,6 @@ def main():
         nn.ReLU(inplace=True),
         nn.Conv2d(256, 19, kernel_size=(1, 1), stride=(1, 1))
     )
-
-    # print(model)
 
     model = model.to(device)
 
