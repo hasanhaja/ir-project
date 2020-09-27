@@ -6,6 +6,7 @@ import os
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import Cityscapes
+from training.apolloscape import Apolloscape
 import torch
 from tqdm import tqdm
 from modeling import *
@@ -36,11 +37,13 @@ def save_ckpt(path):
     print("Model saved as %s" % path)
 
 
-def get_dataset(data_root, crop_size):
+def get_dataset(dataset, data_root, crop_size):
     """ Dataset And Augmentation
     """
+    root_full_path = os.path.join(data_root)
+
     train_transform = et.ExtCompose([
-        et.ExtResize( 512 ),
+        # et.ExtResize( 512 ),
         et.ExtRandomCrop(size=(crop_size, crop_size)),
         et.ExtColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
         et.ExtRandomHorizontalFlip(),
@@ -50,16 +53,25 @@ def get_dataset(data_root, crop_size):
     ])
 
     val_transform = et.ExtCompose([
-        et.ExtResize( 512 ),
+        # et.ExtResize( 512 ),
         et.ExtToTensor(),
         et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                         std=[0.229, 0.224, 0.225]),
     ])
 
-    train_dst = Cityscapes(root=data_root,
-                           split='train', transform=train_transform)
-    val_dst = Cityscapes(root=data_root,
-                         split='val', transform=val_transform)
+    if dataset.lower() == "cityscapes":
+        print(f"[INFO]\nFetching Cityscapes dataset from:\n{root_full_path}")
+        train_dst = Cityscapes(root=data_root,
+                               split='train', transform=train_transform)
+        val_dst = Cityscapes(root=data_root,
+                             split='val', transform=val_transform)
+    else:
+        print(f"[INFO]\nFetching ApolloScape dataset from:\n{root_full_path}")
+        train_dst = Apolloscape(root=root_full_path, road="road02_seg", transform=train_transform,
+                                normalize_poses=True, pose_format='quat', train=True, cache_transform=True, stereo=False)
+
+        val_dst = Apolloscape(root=root_full_path, road="road02_seg",
+                              transform=val_transform, normalize_poses=True, pose_format='quat', train=False, cache_transform=True, stereo=False)
 
     return train_dst, val_dst
 
@@ -88,27 +100,13 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
     return score, ret_samples
 
 
-def main():
-    dataset = "Cityscapes"
+def dataset_config(dataset):
+    return "../../datasets/Cityscapes" if dataset.lower() == "cityscapes" else "../../datasets/ApolloScape"
 
-    # Data augmentation and normalization for training
-    # Just normalization for validation
-    # TODO might need something for "test" as well
-    # TODO Consult this function `def get_dataset(opts)` at https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/2ab9bfdafabfcd951ef02062c0d0aafe01aabd8b/main.py#L97 for more guidance
-    # data_transforms = {
-    #     'train': transforms.Compose([
-    #         transforms.RandomResizedCrop(224),
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #     ]),
-    #     'val': transforms.Compose([
-    #         transforms.Resize(256),
-    #         transforms.CenterCrop(224),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #     ]),
-    # }
+
+def main():
+    # dataset = "Cityscapes"
+    dataset = "ApolloScape"
 
     # Setting up metrics and visualization
     enable_vis = False
@@ -124,14 +122,12 @@ def main():
     # Loading data
     # Cityscapes
 
-    cityscapes_dir = "../../datasets/Cityscapes"
+    dataset_dir = dataset_config(dataset)
 
-    # train_dst = Cityscapes(cityscapes_dir, split="train", mode="fine",
-    #                        target_type="semantic", transform=data_transforms['train'])
-    # val_dst = Cityscapes(cityscapes_dir, split="val", mode="fine",
-    #                      target_type="semantic", transform=data_transforms['val'])
+    # cityscapes_dir = "../../datasets/Cityscapes"
+    # apolloscape_dir = "../../datasets/ApolloScape"
 
-    train_dst, val_dst = get_dataset(cityscapes_dir, 768)
+    train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
 
     # Debug
     # test_dst = Cityscapes(cityscapes_dir, split="val", mode="fine", target_type="semantic")
@@ -141,6 +137,10 @@ def main():
                               shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dst, batch_size=batch_size,
                             shuffle=True, num_workers=2)
+
+    print(len(train_dst))
+
+    return
 
     # TODO verify if the dimensions of the dataloaders are the same.
     # TODO verify if the labeling is correct
@@ -193,7 +193,7 @@ def main():
 
     print(model)
 
-    return 
+    return
 
     # TODO find the corresponding paper
     # TODO check with v3 and other implementations

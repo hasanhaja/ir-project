@@ -4,7 +4,7 @@ import transforms3d.euler as txe
 import transforms3d.quaternions as txq
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
-from common import calc_poses_params, extract_translation
+from training.common import calc_poses_params, extract_translation
 from PIL import Image
 import os
 import glob
