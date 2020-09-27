@@ -1,6 +1,7 @@
 /testing/PSPNet_caffe
 /testing/PSPNet_pytorch
 /testing/DeepLabV3Plus-Pytorch
+/testing/apolloscape-loc
 /testing/models
 /testing/DeepLabv3_pytorch/preliminary_test_results/images
 /testing/DeepLabv3_pytorch/preliminary_test_results/result
