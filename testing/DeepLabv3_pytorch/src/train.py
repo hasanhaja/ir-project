@@ -60,13 +60,13 @@ def get_dataset(dataset, data_root, crop_size):
     ])
 
     if dataset.lower() == "cityscapes":
-        print(f"[INFO]\nFetching Cityscapes dataset from:\n{root_full_path}")
+        print(f"[INFO] Fetching Cityscapes dataset from: {root_full_path}")
         train_dst = Cityscapes(root=data_root,
                                split='train', transform=train_transform)
         val_dst = Cityscapes(root=data_root,
                              split='val', transform=val_transform)
     else:
-        print(f"[INFO]\nFetching ApolloScape dataset from:\n{root_full_path}")
+        print(f"[INFO] Fetching ApolloScape dataset from: {root_full_path}")
         train_dst = Apolloscape(root=root_full_path, road="road02_seg", transform=train_transform,
                                 normalize_poses=True, pose_format='quat', train=True, cache_transform=True, stereo=False)
 
@@ -101,13 +101,16 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
 
 
 def dataset_config(dataset):
-    return "../../datasets/Cityscapes" if dataset.lower() == "cityscapes" else "../../datasets/ApolloScape"
+    if dataset.lower() == "cityscapes":
+        return ("Cityscapes", "../../datasets/Cityscapes")
+    elif dataset.lower() == "apolloscape":
+        return ("ApolloScape", "../../datasets/ApolloScape")
+    else:
+        raise NameError(
+            f"[ERROR] {dataset} not recognized. Use either \"Cityscapes\" or \"ApolloScape\".")
 
 
 def main():
-    # dataset = "Cityscapes"
-    dataset = "ApolloScape"
-
     # Setting up metrics and visualization
     enable_vis = False
     vis_port = 28333
@@ -119,13 +122,9 @@ def main():
     # vis_sample_id = np.random.randint(0, len(val_loader), opts.vis_num_samples,
     #   np.int32) if opts.enable_vis else None
     vis_sample_id = None
+
     # Loading data
-    # Cityscapes
-
-    dataset_dir = dataset_config(dataset)
-
-    # cityscapes_dir = "../../datasets/Cityscapes"
-    # apolloscape_dir = "../../datasets/ApolloScape"
+    dataset, dataset_dir = dataset_config("cityscapes")
 
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
 
@@ -138,7 +137,7 @@ def main():
     val_loader = DataLoader(val_dst, batch_size=batch_size,
                             shuffle=True, num_workers=2)
 
-    print(len(train_dst))
+    print(train_loader)
 
     return
 
@@ -235,6 +234,7 @@ def main():
                         num_epochs=1)
 
     print(model)
+
     # images, labels = train_loader
 
     # print(images)
