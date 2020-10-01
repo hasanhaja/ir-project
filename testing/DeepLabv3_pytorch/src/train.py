@@ -42,29 +42,50 @@ def get_dataset(dataset, data_root, crop_size):
     """
     root_full_path = os.path.join(data_root)
 
-    train_transform = et.ExtCompose([
-        # et.ExtResize( 512 ),
-        et.ExtRandomCrop(size=(crop_size, crop_size)),
-        et.ExtColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
-        et.ExtRandomHorizontalFlip(),
-        et.ExtToTensor(),
-        et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225]),
-    ])
+    # train_transform = et.ExtCompose([
+    #     # et.ExtResize( 512 ),
+    #     # et.ExtRandomCrop(size=(crop_size, crop_size)),
+    #     # et.ExtColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
+    #     # et.ExtRandomHorizontalFlip(),
+    #     et.ExtToTensor(),
+    #     et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+    #                     std=[0.229, 0.224, 0.225]),
+    # ])
 
-    val_transform = et.ExtCompose([
-        # et.ExtResize( 512 ),
-        et.ExtToTensor(),
-        et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225]),
+    # val_transform = et.ExtCompose([
+    #     # et.ExtResize( 512 ),
+    #     et.ExtToTensor(),
+    #     et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+    #                     std=[0.229, 0.224, 0.225]),
+    # ])
+
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(crop_size),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    val_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
     if dataset.lower() == "cityscapes":
         print(f"[INFO] Fetching Cityscapes dataset from: {root_full_path}")
         train_dst = Cityscapes(root=data_root,
-                               split='train', transform=train_transform)
+                               split='train',
+                               transform=train_transform,
+                               target_transform=train_transform,
+                               #    transforms=(train_transform, train_transform)
+                               )
         val_dst = Cityscapes(root=data_root,
-                             split='val', transform=val_transform)
+                             split='val',
+                             transform=val_transform,
+                             target_transform=val_transform,
+                             #  transforms=(train_transform, train_transform)
+                             )
     else:
         print(f"[INFO] Fetching ApolloScape dataset from: {root_full_path}")
         train_dst = Apolloscape(root=root_full_path, road="road02_seg", transform=train_transform,
@@ -127,7 +148,6 @@ def main():
     dataset, dataset_dir = dataset_config("cityscapes")
 
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
-
     # Debug
     # test_dst = Cityscapes(cityscapes_dir, split="val", mode="fine", target_type="semantic")
     batch_size = 16
@@ -137,14 +157,19 @@ def main():
     val_loader = DataLoader(val_dst, batch_size=batch_size,
                             shuffle=True, num_workers=2)
 
-    print(train_loader)
-
-    return
+    # print(train_loader)
+    # [print(f) for f in train_dst.images]
+    # return
 
     # TODO verify if the dimensions of the dataloaders are the same.
     # TODO verify if the labeling is correct
 
     dataloaders = {"train": train_loader, "val": val_loader}
+
+    for batch_id, (inputs, labels) in enumerate(dataloaders["val"]):
+        print(labels)
+
+    return
 
     dataset_sizes = {"train": len(train_dst), "val": len(val_dst)}
     class_names = train_dst.classes
@@ -164,13 +189,13 @@ def main():
 
     # Get model
     output_stride = 16
-    model = deeplabv3plus_resnet101(
-        num_classes=21, output_stride=output_stride)
+    # model = deeplabv3plus_resnet101(
+    # num_classes=21, output_stride=output_stride)
 
-    model.load_state_dict(torch.load("training/pretrained_weights/best_deeplabv3plus_resnet101_voc_os16.pth",
-                                     map_location=torch.device('cpu'))["model_state"])
+    # model.load_state_dict(torch.load("training/pretrained_weights/best_deeplabv3plus_resnet101_voc_os16.pth",
+    #  map_location=torch.device('cpu'))["model_state"])
 
-    set_bn_momentum(model.backbone, momentum=0.01)
+    # set_bn_momentum(model.backbone, momentum=0.01)
 
     # print(model)
 
@@ -190,21 +215,27 @@ def main():
 
     # TODO output the cityscapes model like this and compared
 
-    print(model)
+    # print(model)
 
-    return
+    # return
 
     # TODO find the corresponding paper
     # TODO check with v3 and other implementations
 
-    model.classifier = nn.Sequential(
-        nn.Conv2d(304, 256, kernel_size=(3, 3), stride=(
-            1, 1), padding=(1, 1), bias=False),
-        nn.BatchNorm2d(256, eps=1e-05, momentum=0.1,
-                       affine=True, track_running_stats=True),
-        nn.ReLU(inplace=True),
-        nn.Conv2d(256, 19, kernel_size=(1, 1), stride=(1, 1))
-    )
+    # model.classifier = nn.Sequential(
+    #     nn.Conv2d(304, 256, kernel_size=(3, 3), stride=(
+    #         1, 1), padding=(1, 1), bias=False),
+    #     nn.BatchNorm2d(256, eps=1e-05, momentum=0.1,
+    #                    affine=True, track_running_stats=True),
+    #     nn.ReLU(inplace=True),
+    #     nn.Conv2d(256, 19, kernel_size=(1, 1), stride=(1, 1))
+    # )
+
+    model = torch.hub.load('pytorch/vision:v0.6.0',
+                           'deeplabv3_resnet101', pretrained=True)
+
+    model.aux_classifier[4] = nn.Conv2d(
+        256, 19, kernel_size=(1, 1), stride=(1, 1))
 
     model = model.to(device)
 

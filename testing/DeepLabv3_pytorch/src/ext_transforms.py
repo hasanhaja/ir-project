@@ -34,9 +34,6 @@ class ExtRandomHorizontalFlip(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '(p={})'.format(self.p)
-
-
-
 class ExtCompose(object):
     """Composes several transforms together.
     Args:
@@ -210,28 +207,28 @@ class ExtRandomRotation(object):
         format_string += ')'
         return format_string
 
-class ExtRandomHorizontalFlip(object):
-    """Horizontally flip the given PIL Image randomly with a given probability.
-    Args:
-        p (float): probability of the image being flipped. Default value is 0.5
-    """
+# class ExtRandomHorizontalFlip(object):
+#     """Horizontally flip the given PIL Image randomly with a given probability.
+#     Args:
+#         p (float): probability of the image being flipped. Default value is 0.5
+#     """
 
-    def __init__(self, p=0.5):
-        self.p = p
+#     def __init__(self, p=0.5):
+#         self.p = p
 
-    def __call__(self, img, lbl):
-        """
-        Args:
-            img (PIL Image): Image to be flipped.
-        Returns:
-            PIL Image: Randomly flipped image.
-        """
-        if random.random() < self.p:
-            return F.hflip(img), F.hflip(lbl)
-        return img, lbl
+#     def __call__(self, img, lbl):
+#         """
+#         Args:
+#             img (PIL Image): Image to be flipped.
+#         Returns:
+#             PIL Image: Randomly flipped image.
+#         """
+#         if random.random() < self.p:
+#             return F.hflip(img), F.hflip(lbl)
+#         return img, lbl
 
-    def __repr__(self):
-        return self.__class__.__name__ + '(p={})'.format(self.p)
+#     def __repr__(self):
+#         return self.__class__.__name__ + '(p={})'.format(self.p)
 
 
 class ExtRandomVerticalFlip(object):
