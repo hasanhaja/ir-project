@@ -8,7 +8,7 @@ from .vision import VisionDataset
 from PIL import Image
 
 
- class Cityscapes(VisionDataset):
+ class ApolloScape(VisionDataset):
     """`Cityscapes <http://www.cityscapes-dataset.com/>`_ Dataset.
 
     Args:
@@ -55,6 +55,15 @@ from PIL import Image
 
             img, smnt = dataset[0]
     """
+
+    # TODO change to ApolloscapeClass
+    # TODO add function to map hex color to rbg (util function already provided in labels_apollo.py)
+    # TODO make void the classes not considered by cityscapes
+    # TODO How is this used in evaluation?
+    # TODO change the __init__ function and how the dataset is split
+    # TODO check and update the __get__ function to work properly with apolloscape according to it file structure.
+    # TODO _load_json() might need to be replaced with another function.
+    # Based on https://github.com/mcordts/cityscapesScripts
 
     # Based on https://github.com/mcordts/cityscapesScripts
     CityscapesClass = namedtuple('CityscapesClass', ['name', 'id', 'train_id', 'category', 'category_id',
