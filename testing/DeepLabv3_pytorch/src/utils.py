@@ -3,18 +3,21 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 from collections import OrderedDict
+from torchvision.transforms.functional import normalize
+
 
 class _SimpleSegmentationModel(nn.Module):
     def __init__(self, backbone, classifier):
         super(_SimpleSegmentationModel, self).__init__()
         self.backbone = backbone
         self.classifier = classifier
-        
+
     def forward(self, x):
         input_shape = x.shape[-2:]
         features = self.backbone(x)
         x = self.classifier(features)
-        x = F.interpolate(x, size=input_shape, mode='bilinear', align_corners=False)
+        x = F.interpolate(x, size=input_shape,
+                          mode='bilinear', align_corners=False)
         return x
 
 
@@ -44,6 +47,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
         >>>     [('feat1', torch.Size([1, 64, 56, 56])),
         >>>      ('feat2', torch.Size([1, 256, 14, 14]))]
     """
+
     def __init__(self, model, return_layers):
         if not set(return_layers).issubset([name for name, _ in model.named_children()]):
             raise ValueError("return_layers are not present in model")
@@ -69,3 +73,42 @@ class IntermediateLayerGetter(nn.ModuleDict):
                 out_name = self.return_layers[name]
                 out[out_name] = x
         return out
+
+
+def denormalize(tensor, mean, std):
+    mean = np.array(mean)
+    std = np.array(std)
+
+    _mean = -mean/std
+    _std = 1/std
+    return normalize(tensor, _mean, _std)
+
+
+class Denormalize(object):
+    def __init__(self, mean, std):
+        mean = np.array(mean)
+        std = np.array(std)
+        self._mean = -mean/std
+        self._std = 1/std
+
+    def __call__(self, tensor):
+        if isinstance(tensor, np.ndarray):
+            return (tensor - self._mean.reshape(-1, 1, 1)) / self._std.reshape(-1, 1, 1)
+        return normalize(tensor, self._mean, self._std)
+
+
+def set_bn_momentum(model, momentum=0.1):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.momentum = momentum
+
+
+def fix_bn(model):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.eval()
+
+
+def mkdir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)

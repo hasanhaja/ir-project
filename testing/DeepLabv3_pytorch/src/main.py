@@ -33,6 +33,7 @@ from training.apolloscape import Apolloscape
 from tqdm import tqdm
 from training.stream_metrics import StreamSegMetrics
 from training.visualizer import Visualizer
+from utils import Denormalize
 
 
 class MyDtypeOps(object):
@@ -161,63 +162,115 @@ def convert_sequence_to_video(src="result", dest="result"):
     out.release()
 
 
-def validate(opts, model, loader, device, metrics, ret_samples_ids=None):
+def validate(model, loader, device, metrics, ret_samples_ids=None):
     """Do validation and return specified samples"""
     metrics.reset()
-    ret_samples = []
-    if opts.save_val_results:
-        if not os.path.exists('results'):
-            os.mkdir('results')
-        denorm = utils.Denormalize(mean=[0.485, 0.456, 0.406],
-                                   std=[0.229, 0.224, 0.225])
-        img_id = 0
+    # ret_samples = []
+    # if opts.save_val_results:
+    if not os.path.exists('results'):
+        os.mkdir('results')
+    denorm = Denormalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
+    img_id = 0
 
     with torch.no_grad():
-        for i, (images, labels) in tqdm(enumerate(loader)):
+        loader_iter = iter(loader)
 
-            images = images.to(device, dtype=torch.float32)
-            labels = labels.to(device, dtype=torch.long)
+        while True:
+            loader_val = next(loader_iter, "done")
+            if loader_val == "done":
+                break
+            else:
+                if loader_val is not None:
+                    images = images.to(device, dtype=torch.float32)
+                    labels = labels.to(device, dtype=torch.long)
 
-            outputs = model(images)
-            preds = outputs.detach().max(dim=1)[1].cpu().numpy()
-            targets = labels.cpu().numpy()
+                    outputs = model(images)
+                    preds = outputs.detach().max(dim=1)[1].cpu().numpy()
+                    targets = labels.cpu().numpy()
 
-            metrics.update(targets, preds)
-            if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
-                ret_samples.append(
-                    (images[0].detach().cpu().numpy(), targets[0], preds[0]))
+                    metrics.update(targets, preds)
 
-            if opts.save_val_results:
-                for i in range(len(images)):
-                    image = images[i].detach().cpu().numpy()
-                    target = targets[i]
-                    pred = preds[i]
+                    for i in range(len(images)):
+                        image = images[i].detach().cpu().numpy()
+                        target = targets[i]
+                        pred = preds[i]
 
-                    image = (denorm(image) * 255).transpose(1,
-                                                            2, 0).astype(np.uint8)
-                    target = loader.dataset.decode_target(
-                        target).astype(np.uint8)
-                    pred = loader.dataset.decode_target(pred).astype(np.uint8)
+                        image = (denorm(image) * 255).transpose(1,
+                                                                2, 0).astype(np.uint8)
+                        target = loader.dataset.decode_target(
+                            target).astype(np.uint8)
+                        pred = loader.dataset.decode_target(
+                            pred).astype(np.uint8)
 
-                    Image.fromarray(image).save(
-                        'results/%d_image.png' % img_id)
-                    Image.fromarray(target).save(
-                        'results/%d_target.png' % img_id)
-                    Image.fromarray(pred).save('results/%d_pred.png' % img_id)
+                        Image.fromarray(image).save(
+                            'results/%d_image.png' % img_id)
+                        Image.fromarray(target).save(
+                            'results/%d_target.png' % img_id)
+                        Image.fromarray(pred).save(
+                            'results/%d_pred.png' % img_id)
 
-                    fig = plt.figure()
-                    plt.imshow(image)
-                    plt.axis('off')
-                    plt.imshow(pred, alpha=0.7)
-                    ax = plt.gca()
-                    ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
-                    ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
-                    plt.savefig('results/%d_overlay.png' %
-                                img_id, bbox_inches='tight', pad_inches=0)
-                    plt.close()
-                    img_id += 1
+                        fig = plt.figure()
+                        plt.imshow(image)
+                        plt.axis('off')
+                        plt.imshow(pred, alpha=0.7)
+                        ax = plt.gca()
+                        ax.xaxis.set_major_locator(
+                            matplotlib.ticker.NullLocator())
+                        ax.yaxis.set_major_locator(
+                            matplotlib.ticker.NullLocator())
+                        plt.savefig('results/%d_overlay.png' %
+                                    img_id, bbox_inches='tight', pad_inches=0)
+                        plt.close()
+                        img_id += 1
 
         score = metrics.get_results()
+
+        # for i, (images, labels) in tqdm(enumerate(loader)):
+
+        #     images = images.to(device, dtype=torch.float32)
+        #     labels = labels.to(device, dtype=torch.long)
+
+        #     outputs = model(images)
+        #     preds = outputs.detach().max(dim=1)[1].cpu().numpy()
+        #     targets = labels.cpu().numpy()
+
+        #     metrics.update(targets, preds)
+        #     # if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
+        #     #     ret_samples.append(
+        #     #         (images[0].detach().cpu().numpy(), targets[0], preds[0]))
+
+        #     if opts.save_val_results:
+        #         for i in range(len(images)):
+        #             image = images[i].detach().cpu().numpy()
+        #             target = targets[i]
+        #             pred = preds[i]
+
+        #             image = (denorm(image) * 255).transpose(1,
+        #                                                     2, 0).astype(np.uint8)
+        #             target = loader.dataset.decode_target(
+        #                 target).astype(np.uint8)
+        #             pred = loader.dataset.decode_target(pred).astype(np.uint8)
+
+        #             Image.fromarray(image).save(
+        #                 'results/%d_image.png' % img_id)
+        #             Image.fromarray(target).save(
+        #                 'results/%d_target.png' % img_id)
+        #             Image.fromarray(pred).save('results/%d_pred.png' % img_id)
+
+        #             fig = plt.figure()
+        #             plt.imshow(image)
+        #             plt.axis('off')
+        #             plt.imshow(pred, alpha=0.7)
+        #             ax = plt.gca()
+        #             ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
+        #             ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
+        #             plt.savefig('results/%d_overlay.png' %
+        #                         img_id, bbox_inches='tight', pad_inches=0)
+        #             plt.close()
+        #             img_id += 1
+
+        # score = metrics.get_results()
     return score, ret_samples
 
 
@@ -261,16 +314,16 @@ def get_dataset(dataset, data_root, crop_size):
         # Debug(),
         # transforms.Lambda(func),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        Debug()
+        # Debug()
     ])
 
     target_transform = transforms.Compose([
         # ImageOps(),
         transforms.ToTensor(),
-        MyDtypeOps(),
-        transforms.Lambda(func),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        Debug()
+        # MyDtypeOps(),
+        # transforms.Lambda(func),
+        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        # Debug()
     ])
 
     if dataset.lower() == "cityscapes":
@@ -278,7 +331,7 @@ def get_dataset(dataset, data_root, crop_size):
         train_dst = Cityscapes(root=data_root,
                                split='train',
                                transform=train_transform,
-                               target_transform=train_transform,
+                               target_transform=target_transform,
                                #    transforms=(train_transform, train_transform)
                                )
         val_dst = Cityscapes(root=data_root,
@@ -310,15 +363,15 @@ def dataset_config(dataset):
             f"[ERROR] {dataset} not recognized. Use either \"Cityscapes\" or \"ApolloScape\".")
 
 
-def custom_collate(batch):
-    print("Called")
+# def custom_collate(batch):
+    # print("Called")
     # print(len(batch))
     # [print(e) for e in batch]
     # print("DONE!!")
 
 
 def main():
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # LOAD DATA
     # preprocess = transforms.Compose([
     #     transforms.ToTensor(),
@@ -337,53 +390,47 @@ def main():
     # train_loader = DataLoader(train_dst, batch_size=batch_size,
     #   shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dst, batch_size=batch_size,
-                            shuffle=True, num_workers=2, collate_fn=custom_collate)
+                            shuffle=True, num_workers=2,
+                            # collate_fn=custom_collate
+                            )
 
     # data_iter = iter(val_loader)
 
-    # for i in range(0, 10):
+    # while True:
+    #     val = next(data_iter, "end")
+    #     if val == "end":
+    #         print("Ending...")
+    #         break
+    #     else:
+    #         if val == None:
+    #             print("None found!")
+    #         else:
+    #             inputs, labels = val
+    #             print(labels)
 
-    # [print(target) for target in val_dst.targets]
-    # print(val_dst.target_type)
-    # return
-
-    try:
-        print("Here")
-        for batch_id, (inputs, labels) in enumerate(val_loader):
-            print("Also Here")
-            print(f"Batch: {batch_id}")
-            # TODO this is not printing. WHY?
-    except TypeError as err:
-        print("Something is still not a Tensor.")
-        print(err.args)
-
-    print("Done")
-    return
-
-    # model = torch.hub.load('pytorch/vision:v0.6.0',
-    #    'deeplabv3_resnet101', pretrained=True)
+    metrics = StreamSegMetrics(19)
 
     model = deeplabv3plus_mobilenet(num_classes=19, output_stride=16)
     # checkpoint = torch.load(
     #     "../models/best_deeplabv3plus_mobilenet_cityscapes_os16.pth", map_location=torch.device('cpu'))
 
     model.load_state_dict(torch.load(
-        "../models/best_deeplabv3plus_mobilenet_cityscapes_os16.pth", map_location=torch.device('cpu'))["model_state"])
+        "../models/best_deeplabv3plus_mobilenet_cityscapes_os16.pth", map_location=torch.device(device))["model_state"])
     model = nn.DataParallel(model)
-
-    # model loaded state
-    model.eval()
-
-    val_score, ret_samples = validate(
-        opts=opts, model=model, loader=val_loader, device=device, metrics=metrics, ret_samples_ids=vis_sample_id)
-    print(metrics.to_str(val_score))
 
     # TODO Select val data from apolloscape to evaluate
     # TODO Stream metrics for getting results.
 
-    filename = "../preliminary_test_results/images/170927_064639931_Camera_6.jpg"
+    # filename = "../preliminary_test_results/images/170927_064639931_Camera_6.jpg"
 
     start = time.process_time()
+
+    # model loaded state
+    model.eval()
+
+    val_score, _ = validate(model=model, loader=val_loader,
+                            device=device, metrics=metrics)
+    print(metrics.to_str(val_score))
 
     # result = process_frame(filename)
     # plt.imshow(result)
