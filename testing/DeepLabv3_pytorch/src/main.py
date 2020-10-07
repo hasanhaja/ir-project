@@ -182,6 +182,9 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                 break
             else:
                 if loader_val is not None:
+                    
+                    images, labels = loader_val
+
                     images = images.to(device, dtype=torch.float32)
                     labels = labels.to(device, dtype=torch.long)
 
