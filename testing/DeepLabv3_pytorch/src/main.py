@@ -37,8 +37,26 @@ from training.visualizer import Visualizer
 
 class MyDtypeOps(object):
     def __call__(self, image):
-        print(image)
+        # print(f"Types: {image.dtype}; Image: {image}")
+        if not torch.is_tensor(image):
+            image = transforms.functional.to_tensor(image)
+
+        # print(image.dtype)
         return transforms.functional.convert_image_dtype(image, dtype=torch.float64)
+
+
+class Debug(object):
+    def __call__(self, image):
+        print(f"DEBUG: {image.size()}")
+        return image
+
+
+class ImageOps(object):
+    def __call__(self, image):
+        # print(f"Old: {image.mode}")
+        image.mode = "F"
+        # print(f"New: {image.mode}")
+        return image
 
 
 def process_frame(filename, compose, rescale_size=(800, 700)):
@@ -203,6 +221,10 @@ def validate(opts, model, loader, device, metrics, ret_samples_ids=None):
     return score, ret_samples
 
 
+def func(x):
+    return x.repeat(1, 1, 1)
+
+
 def get_dataset(dataset, data_root, crop_size):
     """ Dataset And Augmentation
     """
@@ -229,14 +251,26 @@ def get_dataset(dataset, data_root, crop_size):
         # transforms.RandomResizedCrop(crop_size),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
     val_transform = transforms.Compose([
         # transforms.Resize(256),
         # transforms.CenterCrop(224),
         transforms.ToTensor(),
+        # MyDtypeOps(),
+        # Debug(),
+        # transforms.Lambda(func),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        Debug()
+    ])
+
+    target_transform = transforms.Compose([
+        # ImageOps(),
+        transforms.ToTensor(),
         MyDtypeOps(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transforms.Lambda(func),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        Debug()
     ])
 
     if dataset.lower() == "cityscapes":
@@ -249,8 +283,10 @@ def get_dataset(dataset, data_root, crop_size):
                                )
         val_dst = Cityscapes(root=data_root,
                              split='val',
+                             #  transform=target_transform,
                              transform=val_transform,
-                             target_transform=val_transform,
+                             target_transform=target_transform,
+                             target_type="semantic",
                              #  transforms=(train_transform, train_transform)
                              )
     else:
@@ -274,6 +310,13 @@ def dataset_config(dataset):
             f"[ERROR] {dataset} not recognized. Use either \"Cityscapes\" or \"ApolloScape\".")
 
 
+def custom_collate(batch):
+    print("Called")
+    # print(len(batch))
+    # [print(e) for e in batch]
+    # print("DONE!!")
+
+
 def main():
 
     # LOAD DATA
@@ -284,17 +327,35 @@ def main():
     # ])
 
     dataset, dataset_dir = dataset_config("cityscapes")
+    # dataset, dataset_dir = dataset_config("apolloscape")
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
+
+    print(len(val_dst))
 
     batch_size = 16
 
     # train_loader = DataLoader(train_dst, batch_size=batch_size,
     #   shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dst, batch_size=batch_size,
-                            shuffle=True, num_workers=2)
+                            shuffle=True, num_workers=2, collate_fn=custom_collate)
 
-    for inputs, labels in val_loader:
-        print(labels)
+    # data_iter = iter(val_loader)
+
+    # for i in range(0, 10):
+
+    # [print(target) for target in val_dst.targets]
+    # print(val_dst.target_type)
+    # return
+
+    try:
+        print("Here")
+        for batch_id, (inputs, labels) in enumerate(val_loader):
+            print("Also Here")
+            print(f"Batch: {batch_id}")
+            # TODO this is not printing. WHY?
+    except TypeError as err:
+        print("Something is still not a Tensor.")
+        print(err.args)
 
     print("Done")
     return
