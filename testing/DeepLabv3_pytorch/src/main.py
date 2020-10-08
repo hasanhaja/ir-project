@@ -29,7 +29,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import Cityscapes as PyCS
-from training.apolloscape import Apolloscape
+from training.apolloscape import Apolloscape as AS
+from apollo_utilities.apolloscape import Apolloscape
 from training.cityscapes import Cityscapes as CS
 from tqdm import tqdm
 from training.stream_metrics import StreamSegMetrics
@@ -346,7 +347,7 @@ def get_dataset(dataset, data_root, crop_size):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
     val_transform = transforms.Compose([
-        transforms.Resize(512),
+        transforms.Resize(128),
         # transforms.CenterCrop(224),
         # transforms.Resize(256),
         transforms.ToTensor(),
@@ -354,7 +355,7 @@ def get_dataset(dataset, data_root, crop_size):
     ])
 
     target_transform = transforms.Compose([
-        transforms.Resize(512),
+        transforms.Resize(128),
         transforms.ToTensor(),
     ])
 
@@ -373,11 +374,22 @@ def get_dataset(dataset, data_root, crop_size):
                              )
     else:
         print(f"[INFO] Fetching ApolloScape dataset from: {root_full_path}")
-        train_dst = Apolloscape(root=root_full_path, road="road02_seg", transform=train_transform,
-                                normalize_poses=True, pose_format='quat', train=True, cache_transform=True, stereo=False)
+        # train_dst = Apolloscape(root=root_full_path, road="road02_seg", transform=train_transform,
+        #                         normalize_poses=True, pose_format='quat', train=True, cache_transform=True, stereo=False)
 
-        val_dst = Apolloscape(root=root_full_path, road="road02_seg",
-                              transform=val_transform, normalize_poses=True, pose_format='quat', train=False, cache_transform=True, stereo=False)
+        # val_dst = Apolloscape(root=root_full_path, road="road02_seg",
+        #                       transform=val_transform, normalize_poses=True, pose_format='quat', train=False, cache_transform=True, stereo=False)
+        train_dst = Apolloscape(root=data_root,
+                                split='train',
+                                transform=train_transform,
+                                #    target_transform=target_transform,
+                                )
+        val_dst = Apolloscape(root=data_root,
+                              split='val',
+                              transform=val_transform,
+                              target_transform=target_transform,
+                              target_type="semantic",
+                              )
 
     return train_dst, val_dst
 
@@ -408,11 +420,9 @@ def main():
     #                         std=[0.229, 0.224, 0.225]),
     # ])
 
-    dataset, dataset_dir = dataset_config("cityscapes")
-    # dataset, dataset_dir = dataset_config("apolloscape")
+    # dataset, dataset_dir = dataset_config("cityscapes")
+    dataset, dataset_dir = dataset_config("apolloscape")
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
-
-    print(len(val_dst))
 
     batch_size = 16
 
