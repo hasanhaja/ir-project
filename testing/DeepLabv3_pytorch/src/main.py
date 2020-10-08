@@ -28,8 +28,9 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torchvision.datasets import Cityscapes
+from torchvision.datasets import Cityscapes as PyCS
 from training.apolloscape import Apolloscape
+from training.cityscapes import Cityscapes as CS
 from tqdm import tqdm
 from training.stream_metrics import StreamSegMetrics
 from training.visualizer import Visualizer
@@ -58,6 +59,30 @@ class ImageOps(object):
         image.mode = "F"
         # print(f"New: {image.mode}")
         return image
+
+
+class Cityscapes(PyCS):
+
+    train_id_to_color = [c.color for c in PyCS.classes if (
+        c.train_id != -1 and c.train_id != 255)]
+    train_id_to_color.append([0, 0, 0])
+    train_id_to_color = np.array(train_id_to_color)
+    id_to_train_id = np.array([c.train_id for c in PyCS.classes])
+
+    def __init__(self, root, split='train', mode='fine', target_type='instance',
+                 transform=None, target_transform=None, transforms=None):
+        super(Cityscapes, self).__init__(root, split, mode,
+                                         target_type, transform, target_transform, transforms)
+
+    @classmethod
+    def encode_target(cls, target):
+        return cls.id_to_train_id[np.array(target)]
+
+    @classmethod
+    def decode_target(cls, target):
+        target[target == 255] = 19
+        #target = target.astype('uint8') + 1
+        return cls.train_id_to_color[target]
 
 
 def process_frame(filename, compose, rescale_size=(800, 700)):
@@ -165,7 +190,7 @@ def convert_sequence_to_video(src="result", dest="result"):
 def validate(model, loader, device, metrics, ret_samples_ids=None):
     """Do validation and return specified samples"""
     metrics.reset()
-    # ret_samples = []
+    ret_samples = []
     # if opts.save_val_results:
     if not os.path.exists('results'):
         os.mkdir('results')
@@ -182,7 +207,7 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                 break
             else:
                 if loader_val is not None:
-                    
+
                     images, labels = loader_val
 
                     images = images.to(device, dtype=torch.float32)
@@ -201,33 +226,44 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
 
                         image = (denorm(image) * 255).transpose(1,
                                                                 2, 0).astype(np.uint8)
+                        # TODO I'm not sure what decode really does for me, so I'm gonna comment it out and see what happens. Might need to reshape it, but don't know into what.
                         target = loader.dataset.decode_target(
                             target).astype(np.uint8)
                         pred = loader.dataset.decode_target(
                             pred).astype(np.uint8)
 
-                        Image.fromarray(image).save(
-                            'results/%d_image.png' % img_id)
-                        Image.fromarray(target).save(
-                            'results/%d_target.png' % img_id)
-                        Image.fromarray(pred).save(
-                            'results/%d_pred.png' % img_id)
+                        # print(f"Target type: {type(target)}")
+                        # print(f"Pred type: {type(pred)}")
+                        # print("Before")
+                        # target = target.astype(np.uint8)
+                        # pred = pred.astype(np.uint8)
 
-                        fig = plt.figure()
-                        plt.imshow(image)
-                        plt.axis('off')
-                        plt.imshow(pred, alpha=0.7)
-                        ax = plt.gca()
-                        ax.xaxis.set_major_locator(
-                            matplotlib.ticker.NullLocator())
-                        ax.yaxis.set_major_locator(
-                            matplotlib.ticker.NullLocator())
-                        plt.savefig('results/%d_overlay.png' %
-                                    img_id, bbox_inches='tight', pad_inches=0)
-                        plt.close()
+                        # print(f"Target type: {type(target)}")
+                        # print(f"Pred type: {type(pred)}")
+
+                        # continue
+
+                        # TODO Can't figure this out yet
+                        # Image.fromarray(image).save(
+                        #     'results/%d_image.png' % img_id)
+                        # Image.fromarray(target).save(
+                        #     'results/%d_target.png' % img_id)
+                        # Image.fromarray(pred).save(
+                        #     'results/%d_pred.png' % img_id)
+
+                        # fig = plt.figure()
+                        # plt.imshow(image)
+                        # plt.axis('off')
+                        # plt.imshow(pred, alpha=0.7)
+                        # ax = plt.gca()
+                        # ax.xaxis.set_major_locator(
+                        #     matplotlib.ticker.NullLocator())
+                        # ax.yaxis.set_major_locator(
+                        #     matplotlib.ticker.NullLocator())
+                        # plt.savefig('results/%d_overlay.png' %
+                        #             img_id, bbox_inches='tight', pad_inches=0)
+                        # plt.close()
                         img_id += 1
-
-        score = metrics.get_results()
 
         # for i, (images, labels) in tqdm(enumerate(loader)):
 
@@ -243,37 +279,36 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
         #     #     ret_samples.append(
         #     #         (images[0].detach().cpu().numpy(), targets[0], preds[0]))
 
-        #     if opts.save_val_results:
-        #         for i in range(len(images)):
-        #             image = images[i].detach().cpu().numpy()
-        #             target = targets[i]
-        #             pred = preds[i]
+        #     for i in range(len(images)):
+        #         image = images[i].detach().cpu().numpy()
+        #         target = targets[i]
+        #         pred = preds[i]
 
-        #             image = (denorm(image) * 255).transpose(1,
-        #                                                     2, 0).astype(np.uint8)
-        #             target = loader.dataset.decode_target(
-        #                 target).astype(np.uint8)
-        #             pred = loader.dataset.decode_target(pred).astype(np.uint8)
+        #         image = (denorm(image) * 255).transpose(1,
+        #                                                 2, 0).astype(np.uint8)
+        #         target = loader.dataset.decode_target(
+        #             target).astype(np.uint8)
+        #         pred = loader.dataset.decode_target(pred).astype(np.uint8)
 
-        #             Image.fromarray(image).save(
-        #                 'results/%d_image.png' % img_id)
-        #             Image.fromarray(target).save(
-        #                 'results/%d_target.png' % img_id)
-        #             Image.fromarray(pred).save('results/%d_pred.png' % img_id)
+        #         Image.fromarray(image).save(
+        #             'results/%d_image.png' % img_id)
+        #         Image.fromarray(target).save(
+        #             'results/%d_target.png' % img_id)
+        #         Image.fromarray(pred).save('results/%d_pred.png' % img_id)
 
-        #             fig = plt.figure()
-        #             plt.imshow(image)
-        #             plt.axis('off')
-        #             plt.imshow(pred, alpha=0.7)
-        #             ax = plt.gca()
-        #             ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
-        #             ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
-        #             plt.savefig('results/%d_overlay.png' %
-        #                         img_id, bbox_inches='tight', pad_inches=0)
-        #             plt.close()
-        #             img_id += 1
+        #         fig = plt.figure()
+        #         plt.imshow(image)
+        #         plt.axis('off')
+        #         plt.imshow(pred, alpha=0.7)
+        #         ax = plt.gca()
+        #         ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
+        #         ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
+        #         plt.savefig('results/%d_overlay.png' %
+        #                     img_id, bbox_inches='tight', pad_inches=0)
+        #         plt.close()
+        #         img_id += 1
 
-        # score = metrics.get_results()
+        score = metrics.get_results()
     return score, ret_samples
 
 
@@ -305,6 +340,7 @@ def get_dataset(dataset, data_root, crop_size):
 
     train_transform = transforms.Compose([
         # transforms.RandomResizedCrop(crop_size),
+        transforms.Resize(256),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
@@ -312,21 +348,14 @@ def get_dataset(dataset, data_root, crop_size):
     val_transform = transforms.Compose([
         # transforms.Resize(256),
         # transforms.CenterCrop(224),
+        transforms.Resize(256),
         transforms.ToTensor(),
-        # MyDtypeOps(),
-        # Debug(),
-        # transforms.Lambda(func),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        # Debug()
     ])
 
     target_transform = transforms.Compose([
-        # ImageOps(),
+        transforms.Resize(256),
         transforms.ToTensor(),
-        # MyDtypeOps(),
-        # transforms.Lambda(func),
-        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        # Debug()
     ])
 
     if dataset.lower() == "cityscapes":
@@ -334,16 +363,13 @@ def get_dataset(dataset, data_root, crop_size):
         train_dst = Cityscapes(root=data_root,
                                split='train',
                                transform=train_transform,
-                               target_transform=target_transform,
-                               #    transforms=(train_transform, train_transform)
+                               #    target_transform=target_transform,
                                )
         val_dst = Cityscapes(root=data_root,
                              split='val',
-                             #  transform=target_transform,
                              transform=val_transform,
                              target_transform=target_transform,
                              target_type="semantic",
-                             #  transforms=(train_transform, train_transform)
                              )
     else:
         print(f"[INFO] Fetching ApolloScape dataset from: {root_full_path}")
@@ -397,6 +423,7 @@ def main():
                             # collate_fn=custom_collate
                             )
 
+    # DEBUG Checking if the iteration works
     # data_iter = iter(val_loader)
 
     # while True:
@@ -410,6 +437,8 @@ def main():
     #         else:
     #             inputs, labels = val
     #             print(labels)
+
+    # return
 
     metrics = StreamSegMetrics(19)
 
