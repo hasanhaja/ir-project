@@ -66,7 +66,9 @@ class Cityscapes(PyCS):
 
     train_id_to_color = [c.color for c in PyCS.classes if (
         c.train_id != -1 and c.train_id != 255)]
+    # print(train_id_to_color)
     train_id_to_color.append([0, 0, 0])
+    # print(train_id_to_color)
     train_id_to_color = np.array(train_id_to_color)
     id_to_train_id = np.array([c.train_id for c in PyCS.classes])
 
@@ -84,6 +86,35 @@ class Cityscapes(PyCS):
         target[target == 255] = 19
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
+
+    # def __getitem__(self, index):
+    #     image = Image.open(self.images[index]).convert('RGB')
+
+    #     targets = []
+    #     for i, t in enumerate(self.target_type):
+    #         if t == 'polygon':
+    #             target = self._load_json(self.targets[index][i])
+    #         else:
+    #             target = Image.open(self.targets[index][i])
+
+    #         targets.append(target)
+
+    #     target = tuple(targets) if len(targets) > 1 else targets[0]
+
+    #     if self.transforms is not None:
+    #         image, target = self.transforms(image, target)
+
+    #     return image, target
+
+    def __getitem__(self, index):
+        image = Image.open(self.images[index]).convert('RGB')
+        target = Image.open(self.targets[index][0])
+        # print(f"DEBUG: Before transform Target - {target.mode}")
+        if self.transforms is not None:
+            image, target = self.transforms(image, target)
+        # print(f"DEBUG: Target - {target.dtype}")
+        target = self.encode_target(target)
+        return image, target
 
 
 def process_frame(filename, compose, rescale_size=(800, 700)):
@@ -213,10 +244,20 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
 
                     images = images.to(device, dtype=torch.float32)
                     labels = labels.to(device, dtype=torch.long)
+                    # labels = labels.to(device, dtype=torch.float32)
 
+                    # TODO what are these doing?
                     outputs = model(images)
                     preds = outputs.detach().max(dim=1)[1].cpu().numpy()
                     targets = labels.cpu().numpy()
+
+                    # print(f"Debug: Outputs - {outputs.dtype}")
+                    # print(f"Debug: Preds - {preds.dtype}")
+                    # print(f"Debug: Targets - {targets.dtype}")
+
+                    # print(f"Debug: Outputs - {outputs.dtype}")
+                    print(f"Debug: Preds - {preds}")
+                    print(f"Debug: Targets - {targets}")
 
                     metrics.update(targets, preds)
 
@@ -225,16 +266,22 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                         target = targets[i]
                         pred = preds[i]
 
+                        print(image.shape)
+
                         image = (denorm(image) * 255).transpose(1,
                                                                 2, 0).astype(np.uint8)
+                        print(image.shape)
+                        # image = image.byte().cpu().numpy()
                         # TODO I'm not sure what decode really does for me, so I'm gonna comment it out and see what happens. Might need to reshape it, but don't know into what.
+                        # target = loader.dataset.decode_target(
+                        #     target).astype(np.uint8).reshape(512, 1024, 3)
                         target = loader.dataset.decode_target(
                             target).astype(np.uint8)
                         pred = loader.dataset.decode_target(
                             pred).astype(np.uint8)
 
-                        # print(f"Target type: {type(target)}")
-                        # print(f"Pred type: {type(pred)}")
+                        print(f"Target shape: {target.shape}")
+                        print(f"Pred shape: {pred.shape}")
                         # print("Before")
                         # target = target.astype(np.uint8)
                         # pred = pred.astype(np.uint8)
@@ -245,12 +292,12 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                         # continue
 
                         # TODO Can't figure this out yet
-                        # Image.fromarray(image).save(
-                        #     'results/%d_image.png' % img_id)
-                        # Image.fromarray(target).save(
-                        #     'results/%d_target.png' % img_id)
-                        # Image.fromarray(pred).save(
-                        #     'results/%d_pred.png' % img_id)
+                        Image.fromarray(image).save(
+                            f'results/{img_id}_image.png')
+                        Image.fromarray(target).save(
+                            f'results/{img_id}_target.png')
+                        Image.fromarray(pred).save(
+                            f'results/{img_id}_pred.png')
 
                         # fig = plt.figure()
                         # plt.imshow(image)
@@ -347,7 +394,7 @@ def get_dataset(dataset, data_root, crop_size):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
     val_transform = transforms.Compose([
-        transforms.Resize(128),
+        transforms.Resize(256),
         # transforms.CenterCrop(224),
         # transforms.Resize(256),
         transforms.ToTensor(),
@@ -355,9 +402,14 @@ def get_dataset(dataset, data_root, crop_size):
     ])
 
     target_transform = transforms.Compose([
-        transforms.Resize(128),
-        transforms.ToTensor(),
+        transforms.Resize(256),
+        # transforms.Grayscale(),
+        # transforms.ToTensor(),
+        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        # transforms.Normalize([0.5], [0.5]),
     ])
+
+    # target_transform = None
 
     if dataset.lower() == "cityscapes":
         print(f"[INFO] Fetching Cityscapes dataset from: {root_full_path}")
@@ -404,11 +456,17 @@ def dataset_config(dataset):
             f"[ERROR] {dataset} not recognized. Use either \"Cityscapes\" or \"ApolloScape\".")
 
 
-# def custom_collate(batch):
-    # print("Called")
-    # print(len(batch))
-    # [print(e) for e in batch]
-    # print("DONE!!")
+def debug_class_and_color(dataset):
+    clazzes = dataset.classes
+    print("Class : Color")
+    [print(f"{clazz.name} : {clazz.color}") for clazz in clazzes]
+
+
+def debug_class_train_id_color(dataset):
+    clazzes = dataset.classes
+    print("Class : Color")
+    [print(f"{clazz.name} : {clazz.train_id} : {clazz.color}")
+     for clazz in clazzes]
 
 
 def main():
@@ -420,9 +478,13 @@ def main():
     #                         std=[0.229, 0.224, 0.225]),
     # ])
 
-    # dataset, dataset_dir = dataset_config("cityscapes")
-    dataset, dataset_dir = dataset_config("apolloscape")
+    dataset, dataset_dir = dataset_config("cityscapes")
+    # dataset, dataset_dir = dataset_config("apolloscape")
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
+
+    # debug_class_train_id_color(val_dst)
+
+    # return
 
     batch_size = 16
 
@@ -446,7 +508,14 @@ def main():
     #             print("None found!")
     #         else:
     #             inputs, labels = val
+    #             print("----------------Labels----------------")
     #             print(labels)
+    #             print("----------------Labels----------------")
+
+    #             print("----------------Inputs----------------")
+    #             print(inputs)
+    #             print("----------------Inputs----------------")
+    #             break
 
     # return
 
