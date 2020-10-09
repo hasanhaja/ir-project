@@ -66,11 +66,14 @@ class Cityscapes(PyCS):
 
     train_id_to_color = [c.color for c in PyCS.classes if (
         c.train_id != -1 and c.train_id != 255)]
+    # [print(c.name) for c in PyCS.classes if (
+    #     c.train_id != -1 and c.train_id != 255)]
     # print(train_id_to_color)
     train_id_to_color.append([0, 0, 0])
     # print(train_id_to_color)
     train_id_to_color = np.array(train_id_to_color)
     id_to_train_id = np.array([c.train_id for c in PyCS.classes])
+    # [print(f"DEBUG: CS ID {e}") for e in id_to_train_id]
 
     def __init__(self, root, split='train', mode='fine', target_type='instance',
                  transform=None, target_transform=None, transforms=None):
@@ -79,7 +82,10 @@ class Cityscapes(PyCS):
 
     @classmethod
     def encode_target(cls, target):
-        return cls.id_to_train_id[np.array(target)]
+        print(f"DEBUG: CS Encode id {len(cls.id_to_train_id)}")
+        result = cls.id_to_train_id[np.array(target)]
+        print(f"DEBUG: CS Encode target {result}")
+        return result
 
     @classmethod
     def decode_target(cls, target):
@@ -94,7 +100,7 @@ class Cityscapes(PyCS):
         # print(f"DEBUG: Before transform Target - {target.mode}")
         if self.transforms is not None:
             image, target = self.transforms(image, target)
-        # print(f"DEBUG: Target - {target.dtype}")
+        # print(f"DEBUG: Target - {type(target)}")
         target = self.encode_target(target)
         return image, target
 
@@ -446,11 +452,13 @@ def debug_class_train_id_color(dataset):
     [print(f"{clazz.name} : {clazz.train_id} : {clazz.color}")
      for clazz in clazzes]
 
+
 def debug_class_id_train_id(dataset):
     clazzes = dataset.classes
     print("Class : Class ID: Train ID")
     [print(f"{clazz.name} : {clazz.id} : {clazz.train_id}")
      for clazz in clazzes]
+
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

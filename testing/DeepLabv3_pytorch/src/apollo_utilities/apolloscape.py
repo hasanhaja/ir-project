@@ -101,60 +101,7 @@ def hex_to_rgb(color):
 
 
 class Apolloscape(VisionDataset):
-    """`Cityscapes <http://www.cityscapes-dataset.com/>`_ Dataset.
-
-    Args:
-        root (string): Root directory of dataset where directory ``leftImg8bit``
-            and ``gtFine`` or ``gtCoarse`` are located.
-        split (string, optional): The image split to use, ``train``, ``test`` or ``val`` if mode="fine"
-            otherwise ``train``, ``train_extra`` or ``val``
-        mode (string, optional): The quality mode to use, ``fine`` or ``coarse``
-        target_type (string or list, optional): Type of target to use, ``instance``, ``semantic``, ``polygon``
-            or ``color``. Can also be a list to output a tuple with all specified target types.
-        transform (callable, optional): A function/transform that takes in a PIL image
-            and returns a transformed version. E.g, ``transforms.RandomCrop``
-        target_transform (callable, optional): A function/transform that takes in the
-            target and transforms it.
-        transforms (callable, optional): A function/transform that takes input sample and its target as entry
-            and returns a transformed version.
-
-    Examples:
-
-        Get semantic segmentation target
-
-        .. code-block:: python
-
-            dataset = Cityscapes('./data/cityscapes', split='train', mode='fine',
-                                 target_type='semantic')
-
-            img, smnt = dataset[0]
-
-        Get multiple targets
-
-        .. code-block:: python
-
-            dataset = Cityscapes('./data/cityscapes', split='train', mode='fine',
-                                 target_type=['instance', 'color', 'polygon'])
-
-            img, (inst, col, poly) = dataset[0]
-
-        Validate on the "coarse" set
-
-        .. code-block:: python
-
-            dataset = Cityscapes('./data/cityscapes', split='val', mode='coarse',
-                                 target_type='semantic')
-
-            img, smnt = dataset[0]
-    """
-
-    # TODO change to ApolloscapeClass
-    # TODO add function to map hex color to rbg (util function already provided in labels_apollo.py)
     # TODO make void the classes not considered by cityscapes
-    # TODO How is this used in evaluation?
-    # TODO change the __init__ function and how the dataset is split
-    # TODO check and update the __get__ function to work properly with apolloscape according to it file structure.
-    # TODO _load_json() might need to be replaced with another function.
 
     ApolloScapeClass = namedtuple('ApolloScapeClass', [
                                   'name', 'id', 'train_id', 'category', 'category_id', 'has_instances', 'ignore_in_eval', 'color'])
@@ -228,7 +175,7 @@ class Apolloscape(VisionDataset):
                          2, True, False, (255, 0, 0)),
         ApolloScapeClass('truck', 27, 14, '移动物体', 2, True,
                          False, (0, 0, 70)),
-        ApolloScapeClass('truck_group', 34, 14, '移动物体',
+        ApolloScapeClass('truck_group', -1, -1, '移动物体',
                          2, True, False, (0, 0, 70)),
         ApolloScapeClass('bus', 28, 15, '移动物体', 2, True,
                          False, (0, 60, 100)),
@@ -274,14 +221,58 @@ class Apolloscape(VisionDataset):
                          8, False, True, (0, 0, 0)),
     ]
 
-    classes = sorted(classes, key = lambda clazz: clazz.id)
+    classes = sorted(classes, key=lambda clazz: clazz.id)
 
-    # TODO I need to sort apolloscape by id
+    # Cityscape to apolloscape mapping to undo what I've done:
+    mapper = namedtuple("mapper", ["name", "cs_id", "as_id"])
+    ids = [
+        Label('others', 2,    0),
+        Label('rover', 1,    1),
+        Label('sky', 23,   17),
+        Label('car', 26,   33),
+        Label('car_groups', 18,  161),
+        Label('motorcycle', 32,   34),
+        Label('motorcycle_group', 22,  162),
+        Label('bicycle', 33,   35),
+        Label('bicycle_group', 29,  163),
+        Label('person', 24,   36),
+        Label('person_group', 30,  164),
+        Label('rider', 25,   37),
+        Label('rider_group', 31,  165),
+        Label('truck', 27,   38),
+        Label('truck_group', -1,  166),
+        Label('bus', 28,   39),
+        Label('bus_group', 35,  167),
+        Label('tricycle', 3,   40),
+        Label('tricycle_group', 14,  168),
+        Label('road', 7,   49),
+        Label('sidewalk', 8,   50),
+        Label('traffic_cone', 4,   65),
+        Label('road_pile', 5,   66),
+        Label('fence', 13,   67),
+        Label('traffic_light', 19,   81),
+        Label('pole', 17,   82),
+        Label('traffic_sign', 20,   83),
+        Label('wall', 12,   84),
+        Label('dustbin', 6,   85),
+        Label('billboard', 9,   86),
+        Label('building', 11,   97),
+        Label('bridge', 15,   98),
+        Label('tunnel', 16,   99),
+        Label('overpass', 10,  100),
+        Label('vegetation', 21,  113),
+        Label('unlabeled', 0,  255),
+    ]
+
     train_id_to_color = [c.color for c in classes if (
         c.train_id != -1 and c.train_id != 255)]
+    # train_id_to_color = [c.color for c in classes if c.train_id != 255]
+    # [print(c.name) for c in classes if (
+    #     c.train_id != 255)]
     train_id_to_color.append([0, 0, 0])
     train_id_to_color = np.array(train_id_to_color)
     id_to_train_id = np.array([c.train_id for c in classes])
+    # [print(f"DEBUG: AS ID {e}") for e in id_to_train_id]
 
     def _construct_path_to_file(self, record, camera, image_name, img_type="image"):
         img_dir, ext = ("ColorImage", ".jpg") if img_type == "image" else (
@@ -361,7 +352,10 @@ class Apolloscape(VisionDataset):
 
     @classmethod
     def encode_target(cls, target):
-        return cls.id_to_train_id[np.array(target)]
+        print(f"DEBUG: AS Encode id {len(cls.id_to_train_id)}")
+        result = cls.id_to_train_id[np.array(target)]
+        print(f"DEBUG: AS Encode target {result}")
+        return result
 
     @classmethod
     def decode_target(cls, target):
@@ -376,7 +370,7 @@ class Apolloscape(VisionDataset):
         # print(f"DEBUG: Before transform Target - {target.mode}")
         if self.transforms is not None:
             image, target = self.transforms(image, target)
-        # print(f"DEBUG: Target - {target.dtype}")
+        # print(f"DEBUG: Target - {type(target)}")
         target = self.encode_target(target)
         return image, target
     # def __getitem__(self, index):
