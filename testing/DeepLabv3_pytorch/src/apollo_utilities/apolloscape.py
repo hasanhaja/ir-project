@@ -200,80 +200,83 @@ class Apolloscape(VisionDataset):
 
     classes = [
         #     name id trainId category  catId  hasInstanceignoreInEval   color
-        ApolloScapeClass('others', 0, 255, '其他', 0, False,
+        ApolloScapeClass('others', 2, 255, '其他', 0, False,
                          True, hex_to_rgb(0x000000)),
         ApolloScapeClass('rover', 1, 255, '其他', 0, False,
                          True, hex_to_rgb(0X000000)),
-        ApolloScapeClass('sky', 17, 10, '天空', 1, False,
+        ApolloScapeClass('sky', 23, 10, '天空', 1, False,
                          False, hex_to_rgb(0x4682B4)),
-        ApolloScapeClass('car', 33, 13, '移动物体', 2, True,
+        ApolloScapeClass('car', 26, 13, '移动物体', 2, True,
                          False, hex_to_rgb(0x00008E)),
-        ApolloScapeClass('car_groups', 161, 13, '移动物体',
+        ApolloScapeClass('car_groups', 18, 255, '移动物体',
                          2, True, False, hex_to_rgb(0x00008E)),
-        ApolloScapeClass('motorcycle', 34, 17, '移动物体',
+        ApolloScapeClass('motorcycle', 32, 17, '移动物体',
                          2, True, False, hex_to_rgb(0x0000E6)),
-        ApolloScapeClass('motorcycle_group', 162, 17,
+        ApolloScapeClass('motorcycle_group', 22, 255,
                          '移动物体', 2, True, False, hex_to_rgb(0x0000E6)),
-        ApolloScapeClass('bicycle', 35, 18, '移动物体', 2, True,
+        ApolloScapeClass('bicycle', 33, 18, '移动物体', 2, True,
                          False, hex_to_rgb(0x770B20)),
-        ApolloScapeClass('bicycle_group', 163, 18, '移动物体',
+        ApolloScapeClass('bicycle_group', 29, 255, '移动物体',
                          2, True, False, hex_to_rgb(0x770B20)),
-        ApolloScapeClass('person', 36, 11, '移动物体', 2, True,
+        ApolloScapeClass('person', 24, 11, '移动物体', 2, True,
                          False, (220, 20, 60)),
-        ApolloScapeClass('person_group', 164, 11, '移动物体',
+        ApolloScapeClass('person_group', 30, 255, '移动物体',
                          2, True, False, (220, 20, 60)),
-        ApolloScapeClass('rider', 37, 12, '移动物体', 2, True,
+        ApolloScapeClass('rider', 25, 12, '移动物体', 2, True,
                          False, (255, 0, 0)),
-        ApolloScapeClass('rider_group', 165, 12, '移动物体',
+        ApolloScapeClass('rider_group', 31, 255, '移动物体',
                          2, True, False, (255, 0, 0)),
-        ApolloScapeClass('truck', 38, 14, '移动物体', 2, True,
+        ApolloScapeClass('truck', 27, 14, '移动物体', 2, True,
                          False, (0, 0, 70)),
-        ApolloScapeClass('truck_group', 166, 14, '移动物体',
+        ApolloScapeClass('truck_group', 34, 14, '移动物体',
                          2, True, False, (0, 0, 70)),
-        ApolloScapeClass('bus', 39, 15, '移动物体', 2, True,
+        ApolloScapeClass('bus', 28, 15, '移动物体', 2, True,
                          False, (0, 60, 100)),
-        ApolloScapeClass('bus_group', 167, 15, '移动物体',
+        ApolloScapeClass('bus_group', 35, 15, '移动物体',
                          2, True, False, (0, 60, 100)),
-        ApolloScapeClass('tricycle', 40, 255, '移动物体', 2,
+        ApolloScapeClass('tricycle', 3, 255, '移动物体', 2,
                          True, False, hex_to_rgb(0x8080c0)),
-        ApolloScapeClass('tricycle_group', 168, 255, '移动物体',
+        ApolloScapeClass('tricycle_group', 14, 255, '移动物体',
                          2, True, False, hex_to_rgb(0x8080c0)),
-        ApolloScapeClass('road', 49, 0, '平面', 3, False,
+        ApolloScapeClass('road', 7, 0, '平面', 3, False,
                          False, (128, 64, 148)),
-        ApolloScapeClass('sidewalk', 50, 1, '平面', 3,
+        ApolloScapeClass('sidewalk', 8, 1, '平面', 3,
                          False, False, (244, 35, 232)),
-        ApolloScapeClass('traffic_cone', 65, 255, '路间障碍',
+        ApolloScapeClass('traffic_cone', 4, 255, '路间障碍',
                          4, False, False, hex_to_rgb(0x000040)),
-        ApolloScapeClass('road_pile', 66, 255, '路间障碍',
+        ApolloScapeClass('road_pile', 5, 255, '路间障碍',
                          4, False, False, hex_to_rgb(0x0000c0)),
-        ApolloScapeClass('fence', 67, 4, '路间障碍', 4, False,
+        ApolloScapeClass('fence', 13, 4, '路间障碍', 4, False,
                          False, (190, 153, 153)),
-        ApolloScapeClass('traffic_light', 81, 6, '路边物体',
+        ApolloScapeClass('traffic_light', 19, 6, '路边物体',
                          5, False, False, (250, 170, 30)),
-        ApolloScapeClass('pole', 82, 5, '路边物体', 5, False,
+        ApolloScapeClass('pole', 17, 5, '路边物体', 5, False,
                          False, (153, 153, 153)),
-        ApolloScapeClass('traffic_sign', 83, 7, '路边物体',
+        ApolloScapeClass('traffic_sign', 20, 7, '路边物体',
                          5, False, False, (220, 220, 0)),
-        ApolloScapeClass('wall', 84, 3, '路边物体', 5, False,
+        ApolloScapeClass('wall', 12, 3, '路边物体', 5, False,
                          False, (102, 102, 156)),
-        ApolloScapeClass('dustbin', 85, 255, '路边物体', 5,
+        ApolloScapeClass('dustbin', 6, 255, '路边物体', 5,
                          False, False, hex_to_rgb(0x4000c0)),
-        ApolloScapeClass('billboard', 86, 255, '路边物体',
+        ApolloScapeClass('billboard', 9, 255, '路边物体',
                          5, False, False, hex_to_rgb(0xc000c0)),
-        ApolloScapeClass('building', 97, 2, '建筑', 6, False,
+        ApolloScapeClass('building', 11, 2, '建筑', 6, False,
                          False, (70, 70, 70)),
-        ApolloScapeClass('bridge', 98, 255, '建筑', 6, False,
+        ApolloScapeClass('bridge', 15, 255, '建筑', 6, False,
                          True, (150, 100, 100)),
-        ApolloScapeClass('tunnel', 99, 255, '建筑', 6, False,
+        ApolloScapeClass('tunnel', 16, 255, '建筑', 6, False,
                          True, (150, 120, 90)),
-        ApolloScapeClass('overpass', 100, 255, '建筑', 6,
+        ApolloScapeClass('overpass', 10, 255, '建筑', 6,
                          False, True, hex_to_rgb(0x408040)),
-        ApolloScapeClass('vegetation', 113, 8, '自然',
+        ApolloScapeClass('vegetation', 21, 8, '自然',
                          7, False, False, (107, 142, 35)),
-        ApolloScapeClass('unlabeled', 255, 255, '未标注',
+        ApolloScapeClass('unlabeled', 0, 255, '未标注',
                          8, False, True, (0, 0, 0)),
     ]
 
+    classes = sorted(classes, key = lambda clazz: clazz.id)
+
+    # TODO I need to sort apolloscape by id
     train_id_to_color = [c.color for c in classes if (
         c.train_id != -1 and c.train_id != 255)]
     train_id_to_color.append([0, 0, 0])
@@ -293,7 +296,6 @@ class Apolloscape(VisionDataset):
     def _construct_path(self, img_type="image"):
         return os.path.join(self.root, self.road, "ColorImage") if img_type == "image" else os.path.join(self.root, self.road, "Label")
 
-    # TODO Update for apolloscape
     def __init__(self, root, road="road02_seg", split='train', target_type='semantic',
                  transform=None, target_transform=None, transforms=None):
         super(Apolloscape, self).__init__(
@@ -367,33 +369,42 @@ class Apolloscape(VisionDataset):
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 
-    # TODO Update for apolloscape
     def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (image, target) where target is a tuple of all target types if target_type is a list with more
-            than one item. Otherwise target is a json object if target_type="polygon", else the image segmentation.
-        """
-
         image = Image.open(self.images[index]).convert('RGB')
-
-        # targets = []
-        # for i, t in enumerate(self.target_type):
-        #     if t == 'polygon':
-        #         target = self._load_json(self.targets[index][i])
-        #     else:
-        #         target = Image.open(self.targets[index][i])
-
-        #     targets.append(target)
+        # NOTE This line is different for Cityscapes
         target = Image.open(self.targets[index])
-        # target = tuple(targets) if len(targets) > 1 else targets[0]
-
+        # print(f"DEBUG: Before transform Target - {target.mode}")
         if self.transforms is not None:
             image, target = self.transforms(image, target)
-
+        # print(f"DEBUG: Target - {target.dtype}")
+        target = self.encode_target(target)
         return image, target
+    # def __getitem__(self, index):
+    #     """
+    #     Args:
+    #         index (int): Index
+    #     Returns:
+    #         tuple: (image, target) where target is a tuple of all target types if target_type is a list with more
+    #         than one item. Otherwise target is a json object if target_type="polygon", else the image segmentation.
+    #     """
+
+    #     image = Image.open(self.images[index]).convert('RGB')
+
+    #     # targets = []
+    #     # for i, t in enumerate(self.target_type):
+    #     #     if t == 'polygon':
+    #     #         target = self._load_json(self.targets[index][i])
+    #     #     else:
+    #     #         target = Image.open(self.targets[index][i])
+
+    #     #     targets.append(target)
+    #     target = Image.open(self.targets[index])
+    #     # target = tuple(targets) if len(targets) > 1 else targets[0]
+
+    #     if self.transforms is not None:
+    #         image, target = self.transforms(image, target)
+
+    #     return image, target
 
     def __len__(self):
         return len(self.images)

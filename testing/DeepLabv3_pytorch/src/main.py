@@ -87,27 +87,9 @@ class Cityscapes(PyCS):
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 
-    # def __getitem__(self, index):
-    #     image = Image.open(self.images[index]).convert('RGB')
-
-    #     targets = []
-    #     for i, t in enumerate(self.target_type):
-    #         if t == 'polygon':
-    #             target = self._load_json(self.targets[index][i])
-    #         else:
-    #             target = Image.open(self.targets[index][i])
-
-    #         targets.append(target)
-
-    #     target = tuple(targets) if len(targets) > 1 else targets[0]
-
-    #     if self.transforms is not None:
-    #         image, target = self.transforms(image, target)
-
-    #     return image, target
-
     def __getitem__(self, index):
         image = Image.open(self.images[index]).convert('RGB')
+        # NOTE This line is different for Cityscapes
         target = Image.open(self.targets[index][0])
         # print(f"DEBUG: Before transform Target - {target.mode}")
         if self.transforms is not None:
@@ -244,9 +226,7 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
 
                     images = images.to(device, dtype=torch.float32)
                     labels = labels.to(device, dtype=torch.long)
-                    # labels = labels.to(device, dtype=torch.float32)
 
-                    # TODO what are these doing?
                     outputs = model(images)
                     preds = outputs.detach().max(dim=1)[1].cpu().numpy()
                     targets = labels.cpu().numpy()
@@ -256,8 +236,8 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                     # print(f"Debug: Targets - {targets.dtype}")
 
                     # print(f"Debug: Outputs - {outputs.dtype}")
-                    print(f"Debug: Preds - {preds}")
-                    print(f"Debug: Targets - {targets}")
+                    # print(f"Debug: Preds - {preds}")
+                    # print(f"Debug: Targets - {targets}")
 
                     metrics.update(targets, preds)
 
@@ -289,9 +269,6 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                         # print(f"Target type: {type(target)}")
                         # print(f"Pred type: {type(pred)}")
 
-                        # continue
-
-                        # TODO Can't figure this out yet
                         Image.fromarray(image).save(
                             f'results/{img_id}_image.png')
                         Image.fromarray(target).save(
@@ -299,6 +276,7 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
                         Image.fromarray(pred).save(
                             f'results/{img_id}_pred.png')
 
+                        # TODO Save the overlay as well
                         # fig = plt.figure()
                         # plt.imshow(image)
                         # plt.axis('off')
@@ -464,10 +442,15 @@ def debug_class_and_color(dataset):
 
 def debug_class_train_id_color(dataset):
     clazzes = dataset.classes
-    print("Class : Color")
+    print("Class : Train ID : Color")
     [print(f"{clazz.name} : {clazz.train_id} : {clazz.color}")
      for clazz in clazzes]
 
+def debug_class_id_train_id(dataset):
+    clazzes = dataset.classes
+    print("Class : Class ID: Train ID")
+    [print(f"{clazz.name} : {clazz.id} : {clazz.train_id}")
+     for clazz in clazzes]
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -478,11 +461,11 @@ def main():
     #                         std=[0.229, 0.224, 0.225]),
     # ])
 
-    dataset, dataset_dir = dataset_config("cityscapes")
-    # dataset, dataset_dir = dataset_config("apolloscape")
+    # dataset, dataset_dir = dataset_config("cityscapes")
+    dataset, dataset_dir = dataset_config("apolloscape")
     train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
 
-    # debug_class_train_id_color(val_dst)
+    # debug_class_id_train_id(val_dst)
 
     # return
 
