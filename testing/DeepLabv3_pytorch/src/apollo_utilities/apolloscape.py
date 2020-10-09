@@ -1,6 +1,7 @@
 import json
 import os
 from collections import namedtuple
+from recordtype import recordtype
 import zipfile
 
 from torchvision.datasets.utils import extract_archive, verify_str_arg, iterable_to_str
@@ -103,7 +104,7 @@ def hex_to_rgb(color):
 class Apolloscape(VisionDataset):
     # TODO make void the classes not considered by cityscapes
 
-    ApolloScapeClass = namedtuple('ApolloScapeClass', [
+    ApolloScapeClass = recordtype('ApolloScapeClass', [
                                   'name', 'id', 'train_id', 'category', 'category_id', 'has_instances', 'ignore_in_eval', 'color'])
 
     # TODO verify what other classes to make void for cityscapes comparison.
@@ -175,7 +176,7 @@ class Apolloscape(VisionDataset):
                          2, True, False, (255, 0, 0)),
         ApolloScapeClass('truck', 27, 14, '移动物体', 2, True,
                          False, (0, 0, 70)),
-        ApolloScapeClass('truck_group', -1, -1, '移动物体',
+        ApolloScapeClass('truck_group', 34, -1, '移动物体',
                          2, True, False, (0, 0, 70)),
         ApolloScapeClass('bus', 28, 15, '移动物体', 2, True,
                          False, (0, 60, 100)),
@@ -224,45 +225,94 @@ class Apolloscape(VisionDataset):
     classes = sorted(classes, key=lambda clazz: clazz.id)
 
     # Cityscape to apolloscape mapping to undo what I've done:
-    mapper = namedtuple("mapper", ["name", "cs_id", "as_id"])
+    Mapper = recordtype("Mapper", ["name", "cs_id", "as_id"])
     ids = [
-        Label('others', 2,    0),
-        Label('rover', 1,    1),
-        Label('sky', 23,   17),
-        Label('car', 26,   33),
-        Label('car_groups', 18,  161),
-        Label('motorcycle', 32,   34),
-        Label('motorcycle_group', 22,  162),
-        Label('bicycle', 33,   35),
-        Label('bicycle_group', 29,  163),
-        Label('person', 24,   36),
-        Label('person_group', 30,  164),
-        Label('rider', 25,   37),
-        Label('rider_group', 31,  165),
-        Label('truck', 27,   38),
-        Label('truck_group', -1,  166),
-        Label('bus', 28,   39),
-        Label('bus_group', 35,  167),
-        Label('tricycle', 3,   40),
-        Label('tricycle_group', 14,  168),
-        Label('road', 7,   49),
-        Label('sidewalk', 8,   50),
-        Label('traffic_cone', 4,   65),
-        Label('road_pile', 5,   66),
-        Label('fence', 13,   67),
-        Label('traffic_light', 19,   81),
-        Label('pole', 17,   82),
-        Label('traffic_sign', 20,   83),
-        Label('wall', 12,   84),
-        Label('dustbin', 6,   85),
-        Label('billboard', 9,   86),
-        Label('building', 11,   97),
-        Label('bridge', 15,   98),
-        Label('tunnel', 16,   99),
-        Label('overpass', 10,  100),
-        Label('vegetation', 21,  113),
-        Label('unlabeled', 0,  255),
+        Mapper('others', 2,    0),
+        Mapper('rover', 1,    1),
+        Mapper('sky', 23,   17),
+        Mapper('car', 26,   33),
+        Mapper('car_groups', 18,  161),
+        Mapper('motorcycle', 32,   34),
+        Mapper('motorcycle_group', 22,  162),
+        Mapper('bicycle', 33,   35),
+        Mapper('bicycle_group', 29,  163),
+        Mapper('person', 24,   36),
+        Mapper('person_group', 30,  164),
+        Mapper('rider', 25,   37),
+        Mapper('rider_group', 31,  165),
+        Mapper('truck', 27,   38),
+        Mapper('truck_group', -1,  166),
+        Mapper('bus', 28,   39),
+        Mapper('bus_group', 35,  167),
+        Mapper('tricycle', 3,   40),
+        Mapper('tricycle_group', 14,  168),
+        Mapper('road', 7,   49),
+        Mapper('sidewalk', 8,   50),
+        Mapper('traffic_cone', 4,   65),
+        Mapper('road_pile', 5,   66),
+        Mapper('fence', 13,   67),
+        Mapper('traffic_light', 19,   81),
+        Mapper('pole', 17,   82),
+        Mapper('traffic_sign', 20,   83),
+        Mapper('wall', 12,   84),
+        Mapper('dustbin', 6,   85),
+        Mapper('billboard', 9,   86),
+        Mapper('building', 11,   97),
+        Mapper('bridge', 15,   98),
+        Mapper('tunnel', 16,   99),
+        Mapper('overpass', 10,  100),
+        Mapper('vegetation', 21,  113),
+        Mapper('unlabeled', 0,  255),
     ]
+
+    def apollo_id_to_cs_id(id, ids=ids, Mapper=Mapper):
+        # cs_id = 255 if id == 254 else id
+        cs_id = id
+        # TODO select nearest known id
+        # TODO keep a list of (elem, score)
+        if id == 17:
+            print("Sky...")
+
+        nearest = (300, 300)
+
+        for mapper in ids:
+            if mapper.as_id == id:
+                cs_id = mapper.cs_id
+                # print(f"Mapping {mapper}; CS ID: {cs_id}")
+                return cs_id
+
+            else:
+                # TODO might have to switch around
+                # print(f"INFO Estimating nearest ID for [{id}]...")
+                if nearest[1] > (mapper.as_id - id):
+                    nearest = (mapper.as_id, id - mapper.as_id)
+                else:
+                    continue
+
+        for mapper in ids:
+            if mapper.as_id == nearest[0]:
+                cs_id = mapper.cs_id
+                print(
+                    f"Mapping {mapper}; CS ID: {cs_id}; Original AS ID: {id}")
+        # print(f"CS ID: {cs_id}")
+        return cs_id
+
+    def apollo_classes_with_original_ids(classes=classes, ids=ids, Mapper=Mapper):
+        updated_classes = classes
+
+        for clazz in updated_classes:
+            correct = ids[Mapper.cs_id == clazz.id]
+
+            for mapper in ids:
+                if mapper.cs_id == clazz.id:
+                    correct = mapper.as_id
+
+            # print(correct)
+            clazz.id = correct
+
+        return updated_classes
+
+    # classes = apollo_classes_with_original_ids(classes)
 
     train_id_to_color = [c.color for c in classes if (
         c.train_id != -1 and c.train_id != 255)]
@@ -271,8 +321,12 @@ class Apolloscape(VisionDataset):
     #     c.train_id != 255)]
     train_id_to_color.append([0, 0, 0])
     train_id_to_color = np.array(train_id_to_color)
+
+    classes = apollo_classes_with_original_ids(classes)
+
     id_to_train_id = np.array([c.train_id for c in classes])
     # [print(f"DEBUG: AS ID {e}") for e in id_to_train_id]
+    # print(f"DEBUG: AS max {max(id_to_train_id)}")
 
     def _construct_path_to_file(self, record, camera, image_name, img_type="image"):
         img_dir, ext = ("ColorImage", ".jpg") if img_type == "image" else (
@@ -347,19 +401,29 @@ class Apolloscape(VisionDataset):
                 self.targets.append(os.path.join(target_dir, label_file))
 
         # TODO properly implement data splitting. Hard coding to 500 images.
-        self.images = self.images[0:500]
-        self.targets = self.targets[0:500]
+        self.images = self.images[1000:1500]
+        self.targets = self.targets[1000:1500]
 
     @classmethod
     def encode_target(cls, target):
-        print(f"DEBUG: AS Encode id {len(cls.id_to_train_id)}")
-        result = cls.id_to_train_id[np.array(target)]
-        print(f"DEBUG: AS Encode target {result}")
+        # print(f"DEBUG: AS Encode id {len(cls.id_to_train_id)}")
+        target = np.array(target)
+        # print(f"DEBUG: Target {target.shape}")
+
+        transformer = np.vectorize(cls.apollo_id_to_cs_id)
+        target = transformer(target)
+        # target = np.array(list(map(lambda e: cls.apollo_id_to_cs_id(e), target)))
+        # print(f"DEBUG: Target {target}")
+        result = cls.id_to_train_id[target]
+        # print(f"DEBUG: AS Encode target {result}")
         return result
 
     @classmethod
     def decode_target(cls, target):
-        target[target == 255] = 19
+        # print(f"What is this: {target[target == 255]}")
+        # target[target == 255] = 19
+        target[target == 255] = 18
+        # print(f"What is this: {target[target == 255]}")
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 

@@ -74,6 +74,7 @@ class Cityscapes(PyCS):
     train_id_to_color = np.array(train_id_to_color)
     id_to_train_id = np.array([c.train_id for c in PyCS.classes])
     # [print(f"DEBUG: CS ID {e}") for e in id_to_train_id]
+    # print(f"DEBUG: CS max {max(id_to_train_id)}")
 
     def __init__(self, root, split='train', mode='fine', target_type='instance',
                  transform=None, target_transform=None, transforms=None):
@@ -82,14 +83,18 @@ class Cityscapes(PyCS):
 
     @classmethod
     def encode_target(cls, target):
-        print(f"DEBUG: CS Encode id {len(cls.id_to_train_id)}")
-        result = cls.id_to_train_id[np.array(target)]
-        print(f"DEBUG: CS Encode target {result}")
+        # print(f"DEBUG: CS Encode id {len(cls.id_to_train_id)}")
+        target = np.array(target)
+        # print(f"DEBUG: Target max {target}")
+        result = cls.id_to_train_id[target]
+        # print(f"DEBUG: CS Encode target {result}")
         return result
 
     @classmethod
     def decode_target(cls, target):
+        print(f"B CS What is this: {target[target == 255]}")
         target[target == 255] = 19
+        print(f"CS What is this: {target[target == 255]}")
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 
@@ -475,6 +480,8 @@ def main():
 
     # debug_class_id_train_id(val_dst)
 
+    # [print(f) for f in val_dst.classes]
+    # debug_class_and_color(val_dst)
     # return
 
     batch_size = 16
