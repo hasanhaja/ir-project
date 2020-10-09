@@ -292,8 +292,8 @@ class Apolloscape(VisionDataset):
         for mapper in ids:
             if mapper.as_id == nearest[0]:
                 cs_id = mapper.cs_id
-                print(
-                    f"Mapping {mapper}; CS ID: {cs_id}; Original AS ID: {id}")
+                # print(
+                # f"Mapping {mapper}; CS ID: {cs_id}; Original AS ID: {id}")
         # print(f"CS ID: {cs_id}")
         return cs_id
 
@@ -404,7 +404,7 @@ class Apolloscape(VisionDataset):
         self.images = self.images[1000:1500]
         self.targets = self.targets[1000:1500]
 
-    @classmethod
+    @ classmethod
     def encode_target(cls, target):
         # print(f"DEBUG: AS Encode id {len(cls.id_to_train_id)}")
         target = np.array(target)
@@ -418,13 +418,13 @@ class Apolloscape(VisionDataset):
         # print(f"DEBUG: AS Encode target {result}")
         return result
 
-    @classmethod
+    @ classmethod
     def decode_target(cls, target):
         # print(f"What is this: {target[target == 255]}")
         # target[target == 255] = 19
         target[target == 255] = 18
         # print(f"What is this: {target[target == 255]}")
-        #target = target.astype('uint8') + 1
+        # target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 
     def __getitem__(self, index):

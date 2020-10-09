@@ -92,9 +92,9 @@ class Cityscapes(PyCS):
 
     @classmethod
     def decode_target(cls, target):
-        print(f"B CS What is this: {target[target == 255]}")
+        # print(f"B CS What is this: {target[target == 255]}")
         target[target == 255] = 19
-        print(f"CS What is this: {target[target == 255]}")
+        # print(f"CS What is this: {target[target == 255]}")
         #target = target.astype('uint8') + 1
         return cls.train_id_to_color[target]
 
@@ -377,13 +377,13 @@ def get_dataset(dataset, data_root, crop_size):
 
     train_transform = transforms.Compose([
         # transforms.RandomResizedCrop(crop_size),
-        transforms.Resize(256),
+        transforms.Resize(crop_size),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
     val_transform = transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize(crop_size),
         # transforms.CenterCrop(224),
         # transforms.Resize(256),
         transforms.ToTensor(),
@@ -391,7 +391,7 @@ def get_dataset(dataset, data_root, crop_size):
     ])
 
     target_transform = transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize(crop_size),
         # transforms.Grayscale(),
         # transforms.ToTensor(),
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
@@ -476,7 +476,7 @@ def main():
 
     # dataset, dataset_dir = dataset_config("cityscapes")
     dataset, dataset_dir = dataset_config("apolloscape")
-    train_dst, val_dst = get_dataset(dataset, dataset_dir, 768)
+    train_dst, val_dst = get_dataset(dataset, dataset_dir, 1024)
 
     # debug_class_id_train_id(val_dst)
 
