@@ -474,23 +474,13 @@ def main():
     #                         std=[0.229, 0.224, 0.225]),
     # ])
 
-    # dataset, dataset_dir = dataset_config("cityscapes")
-    dataset, dataset_dir = dataset_config("apolloscape")
-    train_dst, val_dst = get_dataset(dataset, dataset_dir, 1024)
-
-    # debug_class_id_train_id(val_dst)
-
-    # [print(f) for f in val_dst.classes]
-    # debug_class_and_color(val_dst)
-    # return
+    dataset, dataset_dir = dataset_config("cityscapes")
+    # dataset, dataset_dir = dataset_config("apolloscape")
+    _, val_dst = get_dataset(dataset, dataset_dir, 1024)
 
     batch_size = 16
-
-    # train_loader = DataLoader(train_dst, batch_size=batch_size,
-    #   shuffle=True, num_workers=2)
     val_loader = DataLoader(val_dst, batch_size=batch_size,
                             shuffle=True, num_workers=2,
-                            # collate_fn=custom_collate
                             )
 
     # DEBUG Checking if the iteration works
@@ -520,8 +510,6 @@ def main():
     metrics = StreamSegMetrics(19)
 
     model = deeplabv3plus_mobilenet(num_classes=19, output_stride=16)
-    # checkpoint = torch.load(
-    #     "../models/best_deeplabv3plus_mobilenet_cityscapes_os16.pth", map_location=torch.device('cpu'))
 
     model.load_state_dict(torch.load(
         "../models/best_deeplabv3plus_mobilenet_cityscapes_os16.pth", map_location=torch.device(device))["model_state"])
